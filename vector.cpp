@@ -18,18 +18,37 @@ int main(int argc, char **argv)
 		MPI_Abort(MPI_COMM_WORLD, 1);
 	}
 
-	int vector_size = 20;
-	int number[ vector_size ];
+	int vector_size = 15;
+	int vector[ vector_size ];
+	int num_positions = vector_size / (world_size - 1);
 
 	if (world_rank == 0){
-		int segments = vector_size / world_size;
-		for (int i = 0; i < vector_size; i++){
-			number[i] = i;
+
+		for(int i = 0; i < vector_size; i++){
+			vector[i] = i;
 		}
-		// data, count, datatype, source, tag, communicator
-		MPI_Send( &number, vector_size, MPI_INT,1,0,MPI_COMM_WORLD);
+		
+		
+		int last_pos = 0;
+		for (int i = 0; i < (world_size - 1); i++){
+			int arr_to_send[num_positions];
+			for(int j = 0; j < num_positions; j++){
+				arr_to_send[j] = vector[ last_pos ];
+				last_pos++;
+			}
+			// data, count, datatype, source, tag, communicator
+			MPI_Send( &vector, num_positions, MPI_INT,(i+1),0,MPI_COMM_WORLD);
+		}
+		
 	}else if (world_rank == 1){
-		MPI_Recv(&number, vector_size, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(&vector, num_positions, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		std::cout << vector[0] << std::endl;
+	}else if (world_rank == 2){
+		MPI_Recv(&vector, num_positions, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		std::cout << vector[0] << std::endl;
+	}else if (world_rank == 3){
+		MPI_Recv(&vector, num_positions, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		std::cout << vector[0] << std::endl;
 	}
 	MPI_Finalize();
 }
